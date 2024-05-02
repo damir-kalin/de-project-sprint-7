@@ -1,0 +1,101 @@
+country,city,latitude,longitude,timezone,utcoffset
+Australia,Sydney,-33.86785,151.2073212,Australia/Sydney,11
+Australia,Melbourne,-37.8139966,144.9633179,Australia/Melbourne,11
+Australia,Perth,-31.9333333,115.8333359,Australia/Perth,8
+Australia,Adelaide,-34.9333333,138.6000061,Australia/Adelaide,10.5
+Australia,Brisbane,-27.4679357,153.0280914,Australia/Brisbane,10
+Australia,Gold Coast,-28,153.4333344,Australia/Brisbane,10
+Australia,Newcastle,-32.9271484,151.776474,Australia/Sydney,11
+Australia,Canberra,-35.2834625,149.128067,Australia/Sydney,11
+Australia,Wollongong,-34.4333333,150.8833313,Australia/Sydney,11
+Australia,Geelong,-38.1471126,144.3607025,Australia/Melbourne,11
+Australia,Cairns,-16.9166667,145.7666626,Australia/Brisbane,10
+Australia,Geelong West,-38.1333333,144.3500061,Australia/Melbourne,11
+Australia,Townsville,-19.25,146.8000031,Australia/Brisbane,10
+Australia,Albury,-36.0833333,146.9166718,Australia/Sydney,11
+Australia,Nowra,-34.8833333,150.6000061,Australia/Sydney,11
+Australia,Darwin,-12.4611337,130.8418427,Australia/Darwin,9.5
+Australia,Toowoomba,-27.55,151.9666595,Australia/Brisbane,10
+Australia,Ballarat,-37.5666667,143.8500061,Australia/Melbourne,11
+Australia,Bendigo,-36.7666667,144.2833405,Australia/Melbourne,11
+Australia,Mackay,-21.15,149.1999969,Australia/Brisbane,10
+Australia,Mandurah,-32.55,115.6999969,Australia/Perth,8
+Australia,Launceston,-41.45,147.1666718,Australia/Hobart,11
+Australia,Rockhampton,-23.3833333,150.5,Australia/Brisbane,10
+Australia,Coffs Harbour,-30.3,153.1333313,Australia/Sydney,11
+Australia,South Brisbane,-27.4833333,153.0166626,Australia/Brisbane,10
+Australia,Wagga Wagga,-35.1166667,147.3666687,Australia/Sydney,11
+Australia,Bundaberg,-24.85,152.3500061,Australia/Brisbane,10
+Australia,Port Macquarie,-31.4333333,152.9166718,Australia/Sydney,11
+Australia,Mildura,-34.2,142.1499939,Australia/Melbourne,11
+Australia,Hobart,-42.9166667,147.3333282,Australia/Hobart,11
+Australia,Torquay,-25.2833333,152.8666687,Australia/Brisbane,10
+Australia,Mooloolaba,-26.6833333,153.1166687,Australia/Brisbane,10
+Australia,Taree,-31.9,152.4666595,Australia/Sydney,11
+Australia,Cranbourne,-38.1,145.2833405,Australia/Melbourne,11
+Australia,Caloundra,-26.8,153.1333313,Australia/Brisbane,10
+Australia,Tamworth,-31.1,150.9333344,Australia/Sydney,11
+Australia,Kalgoorlie,-30.75,121.4666672,Australia/Perth,8
+Australia,Shepparton,-36.3833333,145.3999939,Australia/Melbourne,11
+Australia,Melton,-37.6833333,144.5833282,Australia/Melbourne,11
+Australia,Queanbeyan,-35.35,149.2333374,Australia/Sydney,11
+Australia,Wodonga,-36.1166667,146.8833313,Australia/Melbourne,11
+Australia,Lismore,-28.8135438,153.277298,Australia/Sydney,11
+Australia,Gladstone,-23.85,151.25,Australia/Brisbane,10
+Australia,Orange,-33.2833333,149.1000061,Australia/Sydney,11
+Australia,Warrnambool,-38.3833333,142.4833374,Australia/Melbourne,11
+Australia,Sunbury,-37.5833333,144.7333374,Australia/Melbourne,11
+Australia,Dubbo,-32.25,148.6166687,Australia/Sydney,11
+Australia,Geraldton,-28.7666667,114.5999985,Australia/Perth,8
+Australia,Bunbury,-33.3333333,115.6333313,Australia/Perth,8
+Australia,Alice Springs,-23.7,133.8833313,Australia/Darwin,9.5
+Australia,Palmerston,-12.4860237,130.9832916,Australia/Darwin,9.5
+Australia,Albany,-35.0169444,117.8916702,Australia/Perth,8
+Australia,Mount Gambier,-37.8333333,140.7666626,Australia/Adelaide,10.5
+Australia,Armidale,-30.5166667,151.6499939,Australia/Sydney,11
+Australia,Mount Isa,-20.7333333,139.5,Australia/Brisbane,10
+Australia,Caboolture,-27.0833333,152.9499969,Australia/Brisbane,10
+Australia,Goulburn,-34.75,149.7166595,Australia/Sydney,11
+Australia,Mornington,-38.2166667,145.0333405,Australia/Melbourne,11
+Australia,Maryborough,-25.5333333,152.6999969,Australia/Brisbane,10
+Australia,Kwinana,-32.25,115.7666702,Australia/Perth,8
+Australia,Burnie,-41.0666667,145.9166718,Australia/Hobart,11
+Australia,Brunswick,-37.7666667,144.9666595,Australia/Melbourne,11
+Australia,Craigieburn,-37.6,144.9499969,Australia/Melbourne,11
+Australia,Whyalla,-33.0333333,137.5833282,Australia/Adelaide,10.5
+Australia,Echuca,-36.1333333,144.75,Australia/Melbourne,11
+Australia,Devonport,-41.1666667,146.3500061,Australia/Hobart,11
+Australia,Roebourne,-20.7833333,117.1333313,Australia/Perth,8
+Australia,Hornsby,-33.7,151.1000061,Australia/Sydney,11
+Australia,Katoomba,-33.7,150.3000031,Australia/Sydney,11
+Australia,Surfers Paradise,-28.0027378,153.4299927,Australia/Brisbane,10
+Australia,Traralgon,-38.1833333,146.5333405,Australia/Melbourne,11
+Australia,Murray Bridge,-35.1166667,139.2666626,Australia/Adelaide,10.5
+Australia,Nerang,-27.9833333,153.3333282,Australia/Brisbane,10
+Australia,Forster,-32.1666667,152.5166626,Australia/Sydney,11
+Australia,Broken Hill,-31.95,141.4333344,Australia/Broken_Hill,10.5
+Australia,Karratha,-20.7291441,116.8547058,Australia/Perth,8
+Australia,South Grafton,-29.7,152.9499969,Australia/Sydney,11
+Australia,Cessnock,-32.8333333,151.3500061,Australia/Sydney,11
+Australia,Gawler,-34.6,138.7333374,Australia/Adelaide,10.5
+Australia,Deception Bay,-27.2,153.0333405,Australia/Brisbane,10
+Australia,Griffith,-34.2833333,146.0333405,Australia/Sydney,11
+Australia,Buderim,-26.6833333,153.0500031,Australia/Brisbane,10
+Australia,Nambour,-26.6333333,152.9499969,Australia/Brisbane,10
+Australia,Crafers,-35,138.6999969,Australia/Adelaide,10.5
+Australia,Sawtell,-30.3833333,153.1000061,Australia/Sydney,11
+Australia,Kingston,-42.9666667,147.3166656,Australia/Hobart,11
+Australia,Port Hedland,-20.3166667,118.5666656,Australia/Perth,8
+Australia,Ballina,-28.8666667,153.5666656,Australia/Sydney,11
+Australia,Wangaratta,-36.3666667,146.3333282,Australia/Melbourne,11
+Australia,Port Augusta,-32.5,137.7666626,Australia/Adelaide,10.5
+Australia,Singleton,-32.5666667,151.1833344,Australia/Sydney,11
+Australia,Cleveland,-27.5333333,153.2666626,Australia/Brisbane,10
+Australia,Bongaree,-27.0797222,153.1586151,Australia/Brisbane,10
+Australia,Raymond Terrace,-32.75,151.75,Australia/Sydney,11
+Australia,Bacchus Marsh,-37.6833333,144.4499969,Australia/Melbourne,11
+Australia,Broome,-17.9666667,122.2333298,Australia/Perth,8
+Australia,Moe,-38.1666667,146.2666626,Australia/Melbourne,11
+Australia,Sale,-38.1,147.0666656,Australia/Melbourne,11
+Australia,Horsham,-36.7166667,142.1999969,Australia/Melbourne,11
+Australia,Warwick,-28.2333333,152.0166626,Australia/Brisbane,10
