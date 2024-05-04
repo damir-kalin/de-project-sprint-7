@@ -1,29 +1,19 @@
 import os
+import sys
+import subprocess
+from datetime import datetime, timedelta
+
+from pyspark.sql import SparkSession
+from pyspark.sql.window  import Window
+import pyspark.sql.functions as F
+
+RADIUS=6371
+
 os.environ['HADOOP_CONF_DIR'] = '/etc/hadoop/conf'
 os.environ['YARN_CONF_DIR'] = '/etc/hadoop/conf'
 os.environ['PYSPARK_PYTHON'] = '/usr/bin/python3'
 
-import pyspark
-from pyspark.sql import SparkSession
-from pyspark.sql.window  import Window
-import pyspark.sql.functions as F
-import subprocess
-from datetime import datetime, timedelta
-import sys
-
-
 check_path = lambda x: True if subprocess.run(['hdfs', 'dfs', '-ls', x], capture_output=True, text=True).stdout else False
-
-# def input_event_paths(base_path, date):
-#     depth = int(date[8:])
-#     dt = datetime.strptime(date, '%Y-%m-%d')
-#     result = []
-#     for event_type in ['message', 'reaction', 'subscription']:
-#         paths = []
-#         paths = [f"{base_path}/event_type={event_type}/date={(dt - timedelta(days=x)).strftime('%Y-%m-%d')}" for x in range(depth)]
-#         paths = [x for x in paths if check_path(x)]
-#         result.extend(paths)
-#     return result
 
 def input_event_paths(base_path, date, depth):
     dt = datetime.strptime(date, '%Y-%m-%d')
@@ -40,7 +30,7 @@ def add_city_in_events(events, city):
     df = events.crossJoin(city)
 
     df = df.withColumn('distance', F.lit(2) 
-                   * F.lit(6371) 
+                   * F.lit(RADIUS) 
                    * F.asin(F.sqrt(F.pow(F.sin((F.radians(F.col('lat'))
                                                - F.radians(F.col('city_lat')))/F.lit(2)),2)
                                    + (F.cos(F.radians(F.col('city_lat')))
@@ -73,11 +63,6 @@ def main():
                     .appName("Leaning") \
                     .getOrCreate()
     
-#     base_path = "/user/damirkalin/data/geo/events"
-#     date = "2022-02-28"
-#     depth = int("7")
-#     geo_path = "/user/damirkalin/data/geo/geo.csv"
-#     output_path = "/user/damirkalin/analytics/project_sp7_zone_d28"
     
     base_path = sys.argv[1]
     date = sys.argv[2]
@@ -139,10 +124,6 @@ def main():
         .distinct()
     
     df.write.mode("overwrite").parquet(f"{output_path}/date={date}")
-    
-#     df.show(100)
-
-
     
 
 if __name__ == '__main__':

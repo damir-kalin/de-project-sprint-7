@@ -1,32 +1,33 @@
 import os
+import sys
+import subprocess
+from datetime import datetime, timedelta
+
+from pyspark.sql import SparkSession
+from pyspark.sql.window  import Window
+import pyspark.sql.functions as F
+
+RADIUS=6371
+
 os.environ['HADOOP_CONF_DIR'] = '/etc/hadoop/conf'
 os.environ['YARN_CONF_DIR'] = '/etc/hadoop/conf'
 os.environ['PYSPARK_PYTHON'] = '/usr/bin/python3'
 
-import pyspark
-from pyspark.sql import SparkSession
-from pyspark.sql.window  import Window
-import pyspark.sql.functions as F
-import subprocess
-from datetime import datetime, timedelta
-import sys
-
-
 check_path = lambda x: True if subprocess.run(['hdfs', 'dfs', '-ls', x], capture_output=True, text=True).stdout else False
 
-def input_event_paths(base_path,event_type, date, depth):
+def input_event_paths(base_path, event_type, date, depth):
     dt = datetime.strptime(date, '%Y-%m-%d')
-#     for event_type in ['message', 'reaction', 'subscription']:
     paths = [f"{base_path}/event_type={event_type}/date={(dt - timedelta(days=x)).strftime('%Y-%m-%d')}" for x in range(depth)]
     paths = [x for x in paths if check_path(x)]
     return paths
+
 
 def add_city_in_events(events, city):
 
     df = events.crossJoin(city)
 
     df = df.withColumn('distance', F.lit(2) 
-                   * F.lit(6371) 
+                   * F.lit(RADIUS) 
                    * F.asin(F.sqrt(F.pow(F.sin((F.radians(F.col('lat'))
                                                - F.radians(F.col('city_lat')))/F.lit(2)),2)
                                    + (F.cos(F.radians(F.col('city_lat')))
@@ -39,19 +40,7 @@ def add_city_in_events(events, city):
                                         'lat',
                                         'lon')\
                     .orderBy(F.asc('distance'))))\
-        .where((F.col('distance')==F.col('min_distance')) | (F.col('distance').isNull()))
-# \
-#         .select(
-#             F.col('event'),
-#             F.col('lat'),
-#             F.col('lon'),
-#             F.col('city_id'),
-#             F.col('city'),
-#             F.col('city_lat'),
-#             F.col('city_lon'),
-#             F.col('event_type'),
-#             F.col('date')
-#         )
+        .where((F.col('distance')==F.col('min_distance')) )
 
 def add_local_time(df):
     df = df.select(F.col('event.message_from').alias('user_id'),
@@ -71,13 +60,6 @@ def main():
                     .appName("Leaning") \
                     .getOrCreate()
     
-#     base_path = "/user/damirkalin/data/geo/events"
-#     date = "2022-02-28"
-#     depth = int("30")
-#     geo_path = "/user/damirkalin/data/geo/geo.csv"
-#     timezone_path = "/user/damirkalin/data/geo/timezone.csv"
-#     output_path = "/user/damirkalin/analytics/project_sp7_recomendation_d30"
-    
     base_path = sys.argv[1]
     date = sys.argv[2]
     depth = int(sys.argv[3])
@@ -85,20 +67,15 @@ def main():
     timezone_path = sys.argv[5]
     output_path = sys.argv[6]
     
+    messages = spark\
+            .read\
+            .option("basePath", base_path)\
+            .parquet(*input_event_paths(base_path, 'message', date, depth))
     
     subscriptions = spark\
             .read\
             .option("basePath", base_path)\
-            .parquet(*input_event_paths(base_path, 'subscription', date, depth))\
-
-    
-    
-    messages = spark\
-            .read\
-            .option("basePath", base_path)\
-            .parquet(*input_event_paths(base_path, 'message', date, depth))\
-
-#             .parquet("/user/damirkalin/data/geo/events/event_type=message/date=2022-02-27")\
+            .parquet(*input_event_paths(base_path, 'subscription', date, depth))
     
     timezone = spark.read\
         .csv(timezone_path,
@@ -120,72 +97,100 @@ def main():
                F.col('city_lat'),
                F.col('city_lon'))
     
+#     По некоторым городам невозможно определить временную зону.
+#     Поэтому добавляю к городам файл который я нашел в интеренете.
     city_with_tz = city.join(timezone, city.city==timezone.t_city, 'left').drop('t_city')
     
+#     Определяю город и временную зону, где было отправлено сообщение.
+    messages_with_tz = add_city_in_events(messages, city_with_tz)
+#     Выбираем необходимые нам данные
+    messages_with_tz = messages_with_tz.select(F.col('event.message_from').alias('from'),
+                                               F.col('event.message_to').alias('to'),
+                                               F.coalesce(F.col('event.message_ts'), F.col('event.datetime')).alias('ts'),
+                                               F.col('lat'),
+                                               F.col('lon'),
+                                               F.col('date'),
+                                               F.col('city_id'),
+                                               F.col('city_lat'),
+                                               F.col('city_lon'),
+                                               F.col('timezone')
+                                              )
+
+
+#     Определяю какие пользователи на какие каналы подписаны
     subscriptions = subscriptions.select(F.col('event.subscription_channel'), 
-                              F.col('event.user').alias('user_left'))
+                                                F.col('event.user'))
+
+#     Определяю какие пользователи могли бы написать пользователям при условии, если они подписаны на один канал
+    subscriptions = subscriptions.join(subscriptions.select(F.col("user").alias("user_right"), 
+                                                            "subscription_channel"), 
+                                       "subscription_channel"
+                                      )
+#     Определяю пользователей которые общались
+    users_connect = messages_with_tz.filter((F.col('from').isNotNull()) & (F.col('to').isNotNull()))\
+        .select(
+            F.col("from").alias("user"),
+            F.col("to").alias("user_right"),
+        ).distinct()\
+        
+    users_connect = users_connect.union(
+        users_connect.select(F.col("user").alias("user_right"), 
+                             F.col("user_right").alias("user"))
+    ).distinct()
     
-    subscriptions = subscriptions.crossJoin(subscriptions.select(F.col('subscription_channel'), 
-                                                          F.col('user_left').alias('user_right')))\
-                                .filter(F.col('user_left')!=F.col('user_right'))\
-                                .select(F.col('user_left'), F.col('user_right'))
+#     Определяю местоположение пользователей (откуда было отправлено последнее сообщение)
+    window_place = Window().partitionBy('from').orderBy(F.desc('ts'))
+    location_users = messages_with_tz.withColumn('rn', F.row_number().over(window_place))\
+                        .filter(F.col('rn')==1)   
     
-    messages = add_city_in_events(messages, city_with_tz)
+#     Добавляю локальное время
+    location_with_time = location_users.filter(F.col('timezone').isNotNull())\
+                        .withColumn('time_utc', F.date_format(F.col('ts'), "HH:mm:ss"))\
+                        .withColumn('local_time', F.from_utc_timestamp(F.col("time_utc"),
+                                                           F.col('timezone')))\
+                        .select(F.col('from').alias('user'), F.col('local_time'))
     
-    df = messages.select(F.col('event.message_from').alias('from'), 
-                         F.col('event.message_to').alias('to'), 
-                         F.col('event.message_ts').alias('ts'),
-                         F.col('lat'),
-                         F.col('lon'),
-                         F.col('date'),
-                         F.col('city_id'),
-                         F.col('timezone')
-                        ).filter(F.col('to').isNotNull()).alias('orig')
-    
-    df_copy = df.alias('copy')
-    
-    df = df.join(df_copy, 
-                 (F.col('orig.from')==F.col('copy.to'))\
-                 & (F.col('orig.to')==F.col('copy.from')), 
-                 'left_anti').alias('orig')
-    
-    df_copy = df.alias('copy')
-    
-    df = df.crossJoin(df_copy)\
-            .filter((F.col('orig.from')!=F.col('copy.from'))\
-                    & (F.col('orig.to')!=F.col('copy.to'))\
-                    & (F.col('orig.date')==F.col('copy.date')))\
-            .join(subscriptions, 
-                  (F.col('orig.from')==F.col('user_left')) & (F.col('copy.from')==F.col('user_right')),
-                  'inner'
-                 )\
+#     Находим пользователей, расстояние между которыми меньше 1 км.
+    messages_left = messages_with_tz.select(
+                        F.col('from').alias('user'),
+                        F.col('lat'), 
+                        F.col('lon'),
+                        F.col('date'),
+                        F.col('city_id')
+                        )
+    messages_right = messages_with_tz.select(
+                        F.col('from').alias('user_right'),
+                        F.col('lat').alias('lat_right'), 
+                        F.col('lon').alias('lon_right'),
+                        F.col('date'),
+                        F.col('city_id').alias('city_id_right')
+                        )
+    minimum_distance = messages_left.join(messages_right, 'date')\
             .withColumn('distance_users', F.lit(2) 
-                   * F.lit(6371) 
-                   * F.asin(F.sqrt(F.pow(F.sin((F.radians(F.col('orig.lat'))
-                                               - F.radians(F.col('copy.lat')))/F.lit(2)),2)
-                                   + (F.cos(F.radians(F.col('copy.lat')))
-                                      * F.cos(F.radians(F.col('orig.lat')))
-                                      * F.pow(F.sin((F.radians(F.col('orig.lon'))
-                                                   - F.radians(F.col('copy.lon')))/F.lit(2)),2)))))\
-            .filter((F.col('distance_users')<=1) & (F.col('orig.ts')>F.col('copy.ts')))\
-            .withColumn('time_utc', F.date_format(F.col('orig.ts'), "HH:mm:ss"))\
-            .withColumn('local_time', F.from_utc_timestamp(F.col("time_utc"),F.coalesce(F.col('orig.timezone'), F.lit('Australia/Sydney'))))\
+                   * F.lit(RADIUS) 
+                   * F.asin(F.sqrt(F.pow(F.sin((F.radians(F.col('lat'))
+                                               - F.radians(F.col('lat_right')))/F.lit(2)),2)
+                                   + (F.cos(F.radians(F.col('lat_right')))
+                                      * F.cos(F.radians(F.col('lat')))
+                                      * F.pow(F.sin((F.radians(F.col('lon'))
+                                                   - F.radians(F.col('lon_right')))/F.lit(2)),2)))))\
+            .filter((F.col('distance_users')<=1) & (F.col('user')<F.col('user_right')))
+    
+# Выводим результат
+    df = minimum_distance\
+            .join(subscriptions, on=["user", "user_right"], how="leftsemi")\
+            .join(users_connect, on=["user", "user_right"], how="leftsemi")\
+            .join(location_with_time, on="user", how="left")\
             .withColumn('processed_dttm', F.current_timestamp())\
-            .select(F.col('user_left'),
-                    F.col('user_right'),
-                    F.col('processed_dttm'),
-                    F.col('orig.city_id').alias('zone_id'),
-                    F.col('local_time')
-                   )
-    
+            .select(
+                F.col("local_time"),
+                F.col("user").alias("user_left"),
+                "user_right",
+                F.col("processed_dttm"),
+                F.col("city_id").alias("zone_id"),
+            )
+                    
     df.write.mode("overwrite").parquet(f"{output_path}/date={date}")
-    
-#     df.show(10,truncate=False)
-    
-#     df.printSchema()
-
-
-    
 
 if __name__ == '__main__':
     main()

@@ -1,16 +1,17 @@
 import os
-os.environ['HADOOP_CONF_DIR'] = '/etc/hadoop/conf'
-os.environ['YARN_CONF_DIR'] = '/etc/hadoop/conf'
-os.environ['PYSPARK_PYTHON'] = '/usr/bin/python3'
+import sys
+import subprocess
+from datetime import datetime, timedelta
 
-import pyspark
 from pyspark.sql import SparkSession
 from pyspark.sql.window  import Window
 import pyspark.sql.functions as F
-import subprocess
-from datetime import datetime, timedelta
-import sys
 
+RADIUS=6371
+
+os.environ['HADOOP_CONF_DIR'] = '/etc/hadoop/conf'
+os.environ['YARN_CONF_DIR'] = '/etc/hadoop/conf'
+os.environ['PYSPARK_PYTHON'] = '/usr/bin/python3'
 
 check_path = lambda x: True if subprocess.run(['hdfs', 'dfs', '-ls', x], capture_output=True, text=True).stdout else False
 
@@ -26,7 +27,7 @@ def add_city_in_events(events, city):
     df = events.crossJoin(city)
 
     df = df.withColumn('distance', F.lit(2) 
-                   * F.lit(6371) 
+                   * F.lit(RADIUS) 
                    * F.asin(F.sqrt(F.pow(F.sin((F.radians(F.col('lat'))
                                                - F.radians(F.col('city_lat')))/F.lit(2)),2)
                                    + (F.cos(F.radians(F.col('city_lat')))
@@ -35,15 +36,13 @@ def add_city_in_events(events, city):
                                                    - F.radians(F.col('city_lon')))/F.lit(2)),2)))))
 
     return df.withColumn('min_distance', F.min(F.col('distance'))\
-                   .over(Window.partitionBy('event', 
-#                                         'event_type', 
+                   .over(Window.partitionBy('event',
                                         'lat',
                                         'lon')\
                     .orderBy(F.asc('distance'))))\
         .where(F.col('distance')==F.col('min_distance'))\
         .select(
             F.col('event'),
-#             F.col('event_type'),
             F.col('lat'),
             F.col('lon'),
             F.col('city_id'),
@@ -120,15 +119,6 @@ def main():
                     .appName("Leaning") \
                     .getOrCreate()
     
-#     base_path = "/user/damirkalin/data/geo/events/event_type=message"
-# # "/user/damirkalin/data/geo/events/event_type=message"
-# # "/user/master/data/geo/events"
-#     date = "2022-06-21"
-#     depth = int("28")
-#     geo_path = "/user/damirkalin/data/geo/geo.csv"
-#     timezone_path = "/user/damirkalin/data/geo/timezone.csv"
-#     output_path = "/user/damirkalin/analytics/project_sp7_users_d28"
-    
     base_path = sys.argv[1]
     date = sys.argv[2]
     depth = int(sys.argv[3])
@@ -162,8 +152,6 @@ def main():
     
     city_with_tz = city.join(timezone, city.city==timezone.t_city, 'left').drop('t_city')
                         
-
-    
     df_event_city = add_city_in_events(events, city_with_tz)
     
     df_cities = add_cities(df_event_city)
@@ -174,17 +162,8 @@ def main():
             .drop(df_travel.t_user_id)\
             .join(df_local_time, df_cities.user_id==df_local_time.lt_user_id, 'left')\
             .drop(df_local_time.lt_user_id)
-    
-#     df.show(20, truncate=False)
-#     df.printSchema()
 
     df.write.mode("overwrite").parquet(f"{output_path}/date={date}")
-    
-    
-    
-    
-    
-    
 
 if __name__ == '__main__':
     main()
